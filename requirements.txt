@@ -1,0 +1,8 @@
+flask
+Flask-SQLAlchemy
+psycopg2-binary
+gunicorn
+eventlet
+paho-mqtt
+requests
+Flask-Cors

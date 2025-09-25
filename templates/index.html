@@ -1,0 +1,1654 @@
+<!-- SIN BOTÓN, FUNCIONAL-->
+<!--
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Mediciones</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2em;
+      margin: 20px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      padding: 0 40px 40px;
+    }
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    .chart {
+      height: 150px;
+    }
+    canvas {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1><strong>Dashboard de Mediciones</strong></h1>
+  <div class="grid">
+    <div class="card">
+      <div id="gaugeVolt" class="chart"></div>
+      <canvas id="chartVolt"></canvas>
+    </div>
+    <div class="card">
+      <div id="gaugeAmp" class="chart"></div>
+      <canvas id="chartAmp"></canvas>
+    </div>
+    <div class="card">
+      <div id="gaugeTemp" class="chart"></div>
+      <canvas id="chartTemp"></canvas>
+    </div>
+    <div class="card">
+      <div id="gaugeTemp1" class="chart"></div>
+      <canvas id="chartTemp1"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const  voltData = [], ampData = [], tempData = [], temp1Data = [];
+
+    const gaugeVolt = new ApexCharts(document.querySelector("#gaugeVolt"), {
+      chart: { type: 'radialBar' },
+      series: [0],
+      labels: ['Voltaje (V)'],
+      colors: ['#008ffb'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: function (val) { return val + ' V'; } } } } }
+    });
+    gaugeVolt.render();
+
+    const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), {
+      chart: { type: 'radialBar' },
+      series: [0],
+      labels: ['Corriente (A)'],
+      colors: ['#feb019'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: function (val) { return val + ' A'; } } } } }
+    });
+    gaugeAmp.render();
+
+    const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), {
+      chart: { type: 'radialBar' },
+      series: [0],
+      labels: ['Temperatura (°C)'],
+      colors: ['#00e396'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: function (val) { return val + ' °C'; } } } } }
+    });
+    gaugeTemp.render();
+
+    const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), {
+      chart: { type: 'radialBar' },
+      series: [0],
+      labels: ['Temperatura (°C)'],
+      colors: ['#ff4560'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: function (val) { return val + ' °C'; } } } } }
+    });
+    gaugeTemp1.render();
+
+    function createLineChart(id, label, color) {
+      const ctx = document.getElementById(id).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: label,
+            data: [],
+            borderColor: color,
+            pointRadius: 0.3,
+            tension: 0.1,
+            borderWidth: 2,
+            fill: false,
+          }]
+        },
+        options: {
+          scales: { x: { display: false }, y: { beginAtZero: true } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
+    const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
+    const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
+    const chartTemp1 = createLineChart('chartTemp1', 'Temperatura (°C)', '#ff4560');
+
+    const source = new EventSource('/stream');
+    source.onmessage = function(event) {
+      const [volt, amp, temp, temp1] = event.data.split(',').map(parseFloat);
+      const time = new Date().toLocaleTimeString();
+
+      const updateGauge = (gauge, value) => gauge.updateSeries([value]);
+      const updateChart = (chart, dataList, value) => {
+        chart.data.labels.push(time);
+        dataList.push(value);
+        chart.data.datasets[0].data = [...dataList];
+        if (dataList.length > 60) {
+          dataList.shift();
+          chart.data.labels.shift();
+        }
+        chart.update();
+      };
+      
+      updateGauge(gaugeVolt, volt);
+      updateGauge(gaugeAmp, amp);
+      updateGauge(gaugeTemp, temp);
+      updateGauge(gaugeTemp1, temp1);
+
+      updateChart(chartVolt, voltData, volt);
+      updateChart(chartAmp, ampData, amp);
+      updateChart(chartTemp, tempData, temp);
+      updateChart(chartTemp1, temp1Data, temp1);
+    };
+  </script>
+</body>
+</html>-->
+
+
+<!--<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Mediciones</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  
+  //Añadir la librería cliente de Socket.IO
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2em;
+      margin: 20px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      padding: 0 40px 40px;
+    }
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    .chart {
+      height: 150px; /* Manteniendo la altura para los medidores */
+    }
+    canvas {
+      margin-top: 15px;
+    }
+    /* Estilos para el botón de descarga */
+    .header-container {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .download-btn {
+        background-color: #008ffb;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+    .download-btn:hover {
+        background-color: #0073c4;
+    }
+    /* Estilos para el botón de borrado y la ventana de confirmación */
+    .delete-btn { background-color: #e94560; }
+    .delete-btn:hover { background-color: #c73048; }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background-color: #2a2a2a;
+        padding: 25px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+    .modal-content p {
+        margin: 0 0 20px;
+        font-size: 1.1em;
+    }
+    .modal-buttons .btn { margin: 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 0 40px 40px; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
+    .chart { height: 150px; }
+    canvas { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1><strong>Dashboard de Mediciones</strong></h1>
+  
+    // Añadir el botón de descarga
+  <div class="header-container">
+    <a href="/download/csv" class="download-btn">Descargar Datos (CSV)</a>
+    <button id="delete-btn" class="btn delete-btn">Borrar Datos</button>
+  </div>
+
+  // Estructura HTML de la ventana de confirmación** 
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <p>¿Estás seguro de que quieres borrar todos los datos? Esta acción no se puede deshacer.</p>
+        <div class="modal-buttons">
+            <button id="cancel-delete" class="btn">Cancelar</button>
+            <button id="confirm-delete" class="btn delete-btn">Sí, Borrar Todo</button>
+        </div>
+    </div>
+  </div>
+  
+  <div class="grid">
+    <div class="card">
+      <div id="gaugeVolt" class="chart"></div>
+      <canvas id="chartVolt"></canvas>
+    </div>
+    <div class="card">
+      <div id="gaugeAmp" class="chart"></div>
+      <canvas id="chartAmp"></canvas>
+    </div>
+    <div class="card">
+      <div id="gaugeTemp" class="chart"></div>
+      <canvas id="chartTemp"></canvas>
+    </div>
+    <div class="card">
+      <div id="gaugeTemp1" class="chart"></div>
+      <canvas id="chartTemp1"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. CONFIGURACIÓN INICIAL DE GRÁFICOS ---
+
+    // Arrays para mantener los datos de los gráficos de línea
+    const voltData = [], ampData = [], tempData = [], temp1Data = [];
+
+    // Creación de los medidores con ApexCharts
+    const gaugeVolt = new ApexCharts(document.querySelector("#gaugeVolt"), {
+      chart: { type: 'radialBar' }, series: [0], labels: ['Voltaje (V)'], colors: ['#008ffb'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' V' } } } }
+    });
+    gaugeVolt.render();
+
+    const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), {
+      chart: { type: 'radialBar' }, series: [0], labels: ['Corriente (A)'], colors: ['#feb019'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' A' } } } }
+    });
+    gaugeAmp.render();
+
+    const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), {
+      chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura (°C)'], colors: ['#00e396'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } }
+    });
+    gaugeTemp.render();
+
+    const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), {
+      chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura 1 (°C)'], colors: ['#ff4560'],
+      plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } }
+    });
+    gaugeTemp1.render();
+
+    // Creación de los gráficos de línea con Chart.js
+    function createLineChart(id, label, color) {
+      const ctx = document.getElementById(id).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: label, data: [], borderColor: color,
+            pointRadius: 0.3, tension: 0.1, borderWidth: 2, fill: false
+          }]
+        },
+        options: {
+          scales: { x: { display: false }, y: { beginAtZero: true } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
+    const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
+    const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
+    const chartTemp1 = createLineChart('chartTemp1', 'Temperatura 1 (°C)', '#ff4560');
+    
+    const MAX_DATA_POINTS = 3600; // Máximos puntos a mostrar en los gráficos de línea
+
+    // --- 2. LÓGICA DE ACTUALIZACIÓN (ADAPTADA) ---
+
+    function actualizarUI(lectura) {
+        const time = new Date(lectura.timestamp).toLocaleTimeString();
+
+        // Actualizar medidores
+        gaugeVolt.updateSeries([lectura.volt]);
+        gaugeAmp.updateSeries([lectura.amp]);
+        gaugeTemp.updateSeries([lectura.temp]);
+        gaugeTemp1.updateSeries([lectura.temp1]);
+
+        // Función para actualizar los gráficos de Chart.js
+        const updateChart = (chart, dataList, value) => {
+            chart.data.labels.push(time);
+            dataList.push(value);
+            // Mantener solo los últimos 60 puntos
+            if (dataList.length > MAX_DATA_POINTS) {
+                dataList.shift();
+                chart.data.labels.shift();
+            }
+            chart.data.datasets[0].data = [...dataList];
+            chart.update('quiet'); // 'quiet' evita la animación para una actualización más fluida
+        };
+
+        // Actualizar gráficos de línea
+        updateChart(chartVolt, voltData, lectura.volt);
+        updateChart(chartAmp, ampData, lectura.amp);
+        updateChart(chartTemp, tempData, lectura.temp);
+        updateChart(chartTemp1, temp1Data, lectura.temp1);
+    }
+
+    // --- Lógica para el borrado y la ventana de confirmación ---
+    const deleteBtn = document.getElementById('delete-btn');
+    const modal = document.getElementById('confirm-modal');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+
+    deleteBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+    });
+
+    cancelDeleteBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    confirmDeleteBtn.addEventListener('click', () => {
+        console.log('Enviando petición para borrar datos...');
+        fetch('/api/delete-all', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                modal.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error al intentar borrar los datos:', error);
+                modal.style.display = 'none';
+            });
+    });
+
+    // Escuchar el evento de borrado para limpiar los gráficos
+    socket.on('database_cleared', () => {
+        console.log('El servidor ha confirmado la eliminación de datos. Limpiando gráficos.');
+        
+        // Limpiar datos de los gráficos de línea
+        chartVolt.data.datasets[0].data = [];
+        chartAmp.data.datasets[0].data = [];
+        chartTemp.data.datasets[0].data = [];
+        chartTemp1.data.datasets[0].data = [];
+        chartVolt.update();
+        chartAmp.update();
+        chartTemp.update();
+        chartTemp1.update();
+        
+        // Reiniciar los medidores a cero
+        gaugeVolt.updateSeries([0]);
+        gaugeAmp.updateSeries([0]);
+        gaugeTemp.updateSeries([0]);
+        gaugeTemp1.updateSeries([0]);
+    });
+    // --- 3. LÓGICA DE SOCKET.IO ---
+    
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('Conectado al servidor en tiempo real!');
+    });
+
+    socket.on('datos_iniciales', (datos) => {
+        console.log('Recibiendo datos históricos:', datos);
+        // Llenar los gráficos con los datos históricos recibidos
+        for (const lectura of datos) {
+            actualizarUI(lectura);
+        }
+    });
+
+    socket.on('nueva_lectura', (lectura) => {
+        console.log('Nueva lectura recibida:', lectura);
+        actualizarUI(lectura);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Desconectado del servidor.');
+    });
+
+  </script>
+</body>
+</html>-->
+
+<!-- FUNCIONAL SIN EL EJE X -->
+<!--<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Mediciones</title>
+  
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2em;
+      margin: 20px 0;
+    }
+    .header-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .btn {
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .download-btn { background-color: #008ffb; }
+    .download-btn:hover { background-color: #0073c4; }
+    .delete-btn { background-color: #e94560; }
+    .delete-btn:hover { background-color: #c73048; }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background-color: #2a2a2a;
+        padding: 25px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+    .modal-content p {
+        margin: 0 0 20px;
+        font-size: 1.1em;
+    }
+    .modal-buttons .btn { margin: 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 0 40px 40px; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
+    .chart { height: 150px; }
+    canvas { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1><strong>Dashboard de Mediciones</strong></h1>
+  
+  <div class="header-container">
+    <a href="/download/csv" class="btn download-btn">Descargar Datos (CSV)</a>
+    <button id="delete-btn" class="btn delete-btn">Borrar Datos</button>
+  </div>
+
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <p>¿Estás seguro de que quieres borrar todos los datos? Esta acción no se puede deshacer.</p>
+        <div class="modal-buttons">
+            <button id="cancel-delete" class="btn">Cancelar</button>
+            <button id="confirm-delete" class="btn delete-btn">Sí, Borrar Todo</button>
+        </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div id="gaugeVolt" class="chart"></div><canvas id="chartVolt"></canvas></div>
+    <div class="card"><div id="gaugeAmp" class="chart"></div><canvas id="chartAmp"></canvas></div>
+    <div class="card"><div id="gaugeTemp" class="chart"></div><canvas id="chartTemp"></canvas></div>
+    <div class="card"><div id="gaugeTemp1" class="chart"></div><canvas id="chartTemp1"></canvas></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+    
+      // --- CÓDIGO ORIGINAL DE GRÁFICOS (SIN CAMBIOS VISUALES) ---
+      const MAX_DATA_POINTS = 180;
+      const voltData = [], ampData = [], tempData = [], temp1Data = [];
+    
+      const gaugeVolt = new ApexCharts(document.querySelector("#gaugeVolt"), { chart: { type: 'radialBar' }, series: [0], labels: ['Voltaje (V)'], colors: ['#008ffb'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' V' } } } } });
+      gaugeVolt.render();
+      const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Corriente (A)'], colors: ['#feb019'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' A' } } } } });
+      gaugeAmp.render();
+      const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura (°C)'], colors: ['#00e396'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp.render();
+      const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura 1 (°C)'], colors: ['#ff4560'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp1.render();
+    
+      function createLineChart(id, label, color) {
+        const ctx = document.getElementById(id).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: label, data: [], borderColor: color,
+              pointRadius: 0.3, tension: 0.1, borderWidth: 2, fill: false
+            }]
+          },
+          options: {
+            scales: {
+              x: { display: false }, 
+              y: { 
+                beginAtZero: true, 
+                ticks: { color: '#ccc' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    
+      const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
+      const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
+      const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
+      const chartTemp1 = createLineChart('chartTemp1', 'Temperatura 1 (°C)', '#ff4560');
+    
+      const updateChart = (chart, dataList, timeLabel, newValue) => {
+        chart.data.labels.push(timeLabel);
+        dataList.push(newValue);
+        if (dataList.length > MAX_DATA_POINTS) {
+          dataList.shift();
+          chart.data.labels.shift();
+        }
+        chart.data.datasets[0].data = [...dataList];
+        chart.update('quiet');
+      };
+
+      function actualizarUI(lectura) {
+        const timeLabel = new Date(lectura.timestamp).toLocaleTimeString();
+    
+        gaugeVolt.updateSeries([lectura.volt]);
+        gaugeAmp.updateSeries([lectura.amp]);
+        gaugeTemp.updateSeries([lectura.temp]);
+        gaugeTemp1.updateSeries([lectura.temp1]);
+        
+        updateChart(chartVolt, voltData, timeLabel, lectura.volt);
+        updateChart(chartAmp, ampData, timeLabel, lectura.amp);
+        updateChart(chartTemp, tempData, timeLabel, lectura.temp);
+        updateChart(chartTemp1, temp1Data, timeLabel, lectura.temp1);
+      }
+    
+      // --- LÓGICA AÑADIDA PARA EL BOTÓN DE BORRADO ---
+      const deleteBtn = document.getElementById('delete-btn');
+      const modal = document.getElementById('confirm-modal');
+      const confirmDeleteBtn = document.getElementById('confirm-delete');
+      const cancelDeleteBtn = document.getElementById('cancel-delete');
+    
+      deleteBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+      cancelDeleteBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    
+      confirmDeleteBtn.addEventListener('click', () => {
+        fetch('/api/delete-all', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data.message);
+            modal.style.display = 'none';
+          })
+          .catch(error => {
+            console.error('Error al intentar borrar los datos:', error);
+            modal.style.display = 'none';
+          });
+      });
+    
+      // --- LÓGICA DE SOCKET.IO (REEMPLAZA A EVENTSOURCE) ---
+      const socket = io();
+    
+      socket.on('connect', () => { console.log('Conectado al servidor en tiempo real!'); });
+    
+      socket.on('datos_iniciales', (datos) => {
+        console.log('Recibiendo datos históricos:', datos);
+        for (const lectura of datos) {
+          actualizarUI(lectura);
+        }
+      });
+    
+      socket.on('nueva_lectura', (lectura) => {
+        actualizarUI(lectura);
+      });
+      
+      socket.on('database_cleared', () => {
+        console.log('El servidor ha confirmado la eliminación de datos. Limpiando gráficos.');
+        const charts = [chartVolt, chartAmp, chartTemp, chartTemp1];
+        const dataLists = [voltData, ampData, tempData, temp1Data];
+        const gauges = [gaugeVolt, gaugeAmp, gaugeTemp, gaugeTemp1];
+
+        charts.forEach(chart => {
+            chart.data.labels = [];
+            chart.data.datasets[0].data = [];
+            chart.update();
+        });
+        dataLists.forEach(list => list.length = 0); // Vaciar los arrays de datos
+        gauges.forEach(gauge => gauge.updateSeries([0]));
+      });
+    
+      socket.on('disconnect', () => { console.log('Desconectado del servidor.'); });
+    
+    });
+  </script>
+</body>
+</html>-->
+
+<!-- EJE X TIME -->
+<!--<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Mediciones</title>
+  
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2em;
+      margin: 20px 0;
+    }
+    .header-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .btn {
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .download-btn { background-color: #008ffb; }
+    .download-btn:hover { background-color: #0073c4; }
+    .delete-btn { background-color: #e94560; }
+    .delete-btn:hover { background-color: #c73048; }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background-color: #2a2a2a;
+        padding: 25px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+    .modal-content p {
+        margin: 0 0 20px;
+        font-size: 1.1em;
+    }
+    .modal-buttons .btn { margin: 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 0 40px 40px; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
+    .chart { height: 150px; }
+    canvas { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1><strong>Dashboard de Mediciones</strong></h1>
+  
+  <div class="header-container">
+    <a href="/download/csv" class="btn download-btn">Descargar Datos (CSV)</a>
+    <button id="delete-btn" class="btn delete-btn">Borrar Datos</button>
+  </div>
+
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <p>¿Estás seguro de que quieres borrar todos los datos? Esta acción no se puede deshacer.</p>
+        <div class="modal-buttons">
+            <button id="cancel-delete" class="btn">Cancelar</button>
+            <button id="confirm-delete" class="btn delete-btn">Sí, Borrar Todo</button>
+        </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div id="gaugeVolt" class="chart"></div><canvas id="chartVolt"></canvas></div>
+    <div class="card"><div id="gaugeAmp" class="chart"></div><canvas id="chartAmp"></canvas></div>
+    <div class="card"><div id="gaugeTemp" class="chart"></div><canvas id="chartTemp"></canvas></div>
+    <div class="card"><div id="gaugeTemp1" class="chart"></div><canvas id="chartTemp1"></canvas></div>
+  </div>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+    
+      const MAX_DATA_POINTS = 360;
+    
+      const gaugeVolt = new ApexCharts(document.querySelector("#gaugeVolt"), { chart: { type: 'radialBar' }, series: [0], labels: ['Voltaje (V)'], colors: ['#008ffb'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' V' } } } } });
+      gaugeVolt.render();
+      const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Corriente (A)'], colors: ['#feb019'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' A' } } } } });
+      gaugeAmp.render();
+      const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura (°C)'], colors: ['#00e396'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp.render();
+      const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura 1 (°C)'], colors: ['#ff4560'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp1.render();
+    
+      function createLineChart(id, label, color) {
+        const ctx = document.getElementById(id).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: {
+            // Ya no usamos 'labels', los datos ahora son objetos {x, y}
+            datasets: [{
+              label: label, data: [], borderColor: color,
+              pointRadius: 0.3, tension: 0.1, borderWidth: 2, fill: false
+            }]
+          },
+          options: {
+            scales: {
+              // **CAMBIO 2: Configurar el eje X como una escala de tiempo**
+              x: {
+                type: 'time',
+                display: true,
+                time: {
+                  unit: 'second',
+                  tooltipFormat: 'HH:mm:ss', // Formato para el tooltip (al pasar el mouse)
+                  displayFormats: {
+                    second: 'HH:mm:ss' // Formato para las etiquetas del eje
+                  }
+                },
+                ticks: { color: '#ccc' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }, 
+              y: { 
+                beginAtZero: true, 
+                ticks: { color: '#ccc', stepSize: 1 },
+                grid: { display: false }
+              }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    
+      const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
+      const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
+      const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
+      const chartTemp1 = createLineChart('chartTemp1', 'Temperatura 1 (°C)', '#ff4560');
+    
+      // **CAMBIO 3: La función de actualización ahora usa objetos {x, y}**
+      const updateChart = (chart, newDataPoint) => {
+        const data = chart.data.datasets[0].data;
+        data.push(newDataPoint);
+        if (data.length > MAX_DATA_POINTS) {
+          data.shift();
+        }
+        chart.update('quiet');
+      };
+
+      function actualizarUI(lectura) {
+        // Se convierte el string de fecha a un timestamp numérico para el gráfico
+        const timestamp = new Date(lectura.timestamp).getTime();
+    
+        gaugeVolt.updateSeries([lectura.volt]);
+        gaugeAmp.updateSeries([lectura.amp]);
+        gaugeTemp.updateSeries([lectura.temp]);
+        gaugeTemp1.updateSeries([lectura.temp1]);
+        
+        updateChart(chartVolt, { x: timestamp, y: lectura.volt });
+        updateChart(chartAmp, { x: timestamp, y: lectura.amp });
+        updateChart(chartTemp, { x: timestamp, y: lectura.temp });
+        updateChart(chartTemp1, { x: timestamp, y: lectura.temp1 });
+      }
+    
+      // --- LÓGICA DEL BOTÓN DE BORRADO ---
+      const deleteBtn = document.getElementById('delete-btn');
+      const modal = document.getElementById('confirm-modal');
+      const confirmDeleteBtn = document.getElementById('confirm-delete');
+      const cancelDeleteBtn = document.getElementById('cancel-delete');
+    
+      deleteBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+      cancelDeleteBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    
+      confirmDeleteBtn.addEventListener('click', () => {
+        fetch('/api/delete-all', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data.message);
+            modal.style.display = 'none';
+          })
+          .catch(error => {
+            console.error('Error al intentar borrar los datos:', error);
+            modal.style.display = 'none';
+          });
+      });
+    
+      // --- LÓGICA DE SOCKET.IO ---
+      const socket = io();
+    
+      socket.on('connect', () => { console.log('Conectado al servidor en tiempo real!'); });
+    
+      socket.on('datos_iniciales', (datos) => {
+        console.log('Recibiendo datos históricos:', datos);
+        
+        // **CAMBIO 4: Mapear los datos históricos al formato {x, y}**
+        const fillChart = (chart, data, key) => {
+            chart.data.datasets[0].data = data.map(d => ({ x: new Date(d.timestamp).getTime(), y: d[key] }));
+            chart.update();
+        };
+
+        fillChart(chartVolt, datos, 'volt');
+        fillChart(chartAmp, datos, 'amp');
+        fillChart(chartTemp, datos, 'temp');
+        fillChart(chartTemp1, datos, 'temp1');
+        
+        if (datos.length > 0) {
+            const ultimaLectura = datos[datos.length - 1];
+            gaugeVolt.updateSeries([ultimaLectura.volt]);
+            gaugeAmp.updateSeries([ultimaLectura.amp]);
+            gaugeTemp.updateSeries([ultimaLectura.temp]);
+            gaugeTemp1.updateSeries([ultimaLectura.temp1]);
+        }
+      });
+    
+      socket.on('nueva_lectura', (lectura) => {
+        actualizarUI(lectura);
+      });
+      
+      socket.on('database_cleared', () => {
+        console.log('El servidor ha confirmado la eliminación de datos. Limpiando gráficos.');
+        const charts = [chartVolt, chartAmp, chartTemp, chartTemp1];
+        const gauges = [gaugeVolt, gaugeAmp, gaugeTemp, gaugeTemp1];
+
+        charts.forEach(chart => {
+            chart.data.datasets[0].data = [];
+            chart.update();
+        });
+        gauges.forEach(gauge => gauge.updateSeries([0]));
+      });
+    
+      socket.on('disconnect', () => { console.log('Desconectado del servidor.'); });
+    
+    });
+  </script>
+</body>
+</html>-->
+
+<!-- Nuevo con MQTT Y HTTP -->
+<!--<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Mediciones</title>
+  
+  <style>
+    /* ... (CSS sin cambios) ... */
+    body { margin: 0; background-color: #121212; color: #ffffff; font-family: Arial, sans-serif; }
+    h1 { text-align: center; font-size: 2em; margin: 20px 0; }
+    .header-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    .btn { color: white; padding: 10px 20px; text-decoration: none; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+    .download-btn { background-color: #008ffb; }
+    .download-btn:hover { background-color: #0073c4; }
+    .delete-btn { background-color: #e94560; }
+    .delete-btn:hover { background-color: #c73048; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+    .modal-content { background-color: #2a2a2a; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .modal-content p { margin: 0 0 20px; font-size: 1.1em; }
+    .modal-buttons .btn { margin: 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 0 40px 40px; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
+    .chart { height: 150px; }
+    canvas { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1><strong>Dashboard de Mediciones</strong></h1>
+  
+  <div class="header-container">
+    <a href="/download/csv" class="btn download-btn">Descargar Datos (CSV)</a>
+    <button id="delete-btn" class="btn delete-btn">Borrar Datos</button>
+  </div>
+
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <p>¿Estás seguro de que quieres borrar todos los datos? Esta acción no se puede deshacer.</p>
+        <div class="modal-buttons">
+            <button id="cancel-delete" class="btn">Cancelar</button>
+            <button id="confirm-delete" class="btn delete-btn">Sí, Borrar Todo</button>
+        </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div id="gaugeVolt" class="chart"></div><canvas id="chartVolt"></canvas></div>
+    <div class="card"><div id="gaugeAmp" class="chart"></div><canvas id="chartAmp"></canvas></div>
+    <div class="card"><div id="gaugeTemp" class="chart"></div><canvas id="chartTemp"></canvas></div>
+    <div class="card"><div id="gaugeTemp1" class="chart"></div><canvas id="chartTemp1"></canvas></div>
+  </div>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+ 
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+    
+      const MAX_DATA_POINTS = 360;
+      const voltData = [], ampData = [], tempData = [], temp1Data = [];
+    
+      // ... (código de creación de gráficos sin cambios) ...
+      const gaugeVolt = new ApexCharts(document.querySelector("#gaugeVolt"), { chart: { type: 'radialBar' }, series: [0], labels: ['Voltaje (V)'], colors: ['#008ffb'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' V' } } } } });
+      gaugeVolt.render();
+      const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Corriente (A)'], colors: ['#feb019'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' A' } } } } });
+      gaugeAmp.render();
+      const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura (°C)'], colors: ['#00e396'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp.render();
+      const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura 1 (°C)'], colors: ['#ff4560'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp1.render();
+      function createLineChart(id, label, color) {
+        const ctx = document.getElementById(id).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: label, data: [], borderColor: color,
+              pointRadius: 0.3, tension: 0.1, borderWidth: 2, fill: false
+            }]
+          },
+          options: {
+            scales: {
+              x: { display: false }, 
+              y: { 
+                beginAtZero: true, 
+                ticks: { color: '#ccc', stepSize: 1 },
+                grid: { display: false }
+              }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+      const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
+      const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
+      const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
+      const chartTemp1 = createLineChart('chartTemp1', 'Temperatura 1 (°C)', '#ff4560');
+    
+      const updateChart = (chart, dataList, timeLabel, newValue) => {
+        chart.data.labels.push(timeLabel);
+        dataList.push(newValue);
+        if (dataList.length > MAX_DATA_POINTS) {
+          dataList.shift();
+          chart.data.labels.shift();
+        }
+        chart.data.datasets[0].data = [...dataList];
+        chart.update('quiet');
+      };
+
+      function actualizarUI(lectura) {
+        const timeLabel = new Date(lectura.timestamp).toLocaleTimeString();
+        gaugeVolt.updateSeries([lectura.volt]);
+        gaugeAmp.updateSeries([lectura.amp]);
+        gaugeTemp.updateSeries([lectura.temp]);
+        gaugeTemp1.updateSeries([lectura.temp1]);
+        updateChart(chartVolt, voltData, timeLabel, lectura.volt);
+        updateChart(chartAmp, ampData, timeLabel, lectura.amp);
+        updateChart(chartTemp, tempData, timeLabel, lectura.temp);
+        updateChart(chartTemp1, temp1Data, timeLabel, lectura.temp1);
+      }
+    
+      // --- LÓGICA DEL BOTÓN DE BORRADO (SIN CAMBIOS) ---
+      const deleteBtn = document.getElementById('delete-btn');
+      const modal = document.getElementById('confirm-modal');
+      const confirmDeleteBtn = document.getElementById('confirm-delete');
+      const cancelDeleteBtn = document.getElementById('cancel-delete');
+      deleteBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+      cancelDeleteBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+      confirmDeleteBtn.addEventListener('click', () => {
+        fetch('/api/delete-all', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data.message);
+            modal.style.display = 'none';
+            // Recargar la página para ver los gráficos vacíos
+            window.location.reload();
+          })
+          .catch(error => {
+            console.error('Error al intentar borrar los datos:', error);
+            modal.style.display = 'none';
+          });
+      });
+    
+      // --- NUEVA LÓGICA DE POLLING ---
+      let ultimoIdProcesado = -1; // Para no redibujar el mismo dato
+
+      function cargarUltimaLectura() {
+        fetch('/api/ultima-lectura')
+          .then(res => res.json())
+          .then(lectura => {
+            // Solo actualizar si la lectura existe y es nueva
+            if (lectura && lectura.id && lectura.id !== ultimoIdProcesado) {
+              actualizarUI(lectura);
+              ultimoIdProcesado = lectura.id;
+            }
+          })
+          .catch(err => {
+            console.error('Error al cargar última lectura:', err);
+          });
+      }
+
+      // Preguntar por un nuevo dato cada segundo
+      setInterval(cargarUltimaLectura, 1000);
+    
+    });
+  </script>
+</body>
+</html>-->
+
+<!--
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Mediciones</title>
+  
+  <style>
+    /* Estilos CSS para el dashboard */
+    body { margin: 0; background-color: #121212; color: #ffffff; font-family: Arial, sans-serif; }
+    h1 { text-align: center; font-size: 2em; margin: 20px 0; }
+    .header-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    .btn { color: white; padding: 10px 20px; text-decoration: none; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+    .download-btn { background-color: #008ffb; }
+    .download-btn:hover { background-color: #0073c4; }
+    .delete-btn { background-color: #e94560; }
+    .delete-btn:hover { background-color: #c73048; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+    .modal-content { background-color: #2a2a2a; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .modal-content p { margin: 0 0 20px; font-size: 1.1em; }
+    .modal-buttons .btn { margin: 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 0 40px 40px; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
+    .chart { height: 150px; }
+    canvas { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1><strong>Dashboard de Mediciones</strong></h1>
+  
+  <div class="header-container">
+    <a href="https://iot-monitor-i2wr.onrender.com/download/csv" class="btn download-btn">Descargar Datos (CSV)</a>
+    <button id="delete-btn" class="btn delete-btn">Borrar Datos</button>
+  </div>
+
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <p>¿Estás seguro de que quieres borrar todos los datos? Esta acción no se puede deshacer.</p>
+        <div class="modal-buttons">
+            <button id="cancel-delete" class="btn">Cancelar</button>
+            <button id="confirm-delete" class="btn delete-btn">Sí, Borrar Todo</button>
+        </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div id="gaugeVolt" class="chart"></div><canvas id="chartVolt"></canvas></div>
+    <div class="card"><div id="gaugeAmp" class="chart"></div><canvas id="chartAmp"></canvas></div>
+    <div class="card"><div id="gaugeTemp" class="chart"></div><canvas id="chartTemp"></canvas></div>
+    <div class="card"><div id="gaugeTemp1" class="chart"></div><canvas id="chartTemp1"></canvas></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+    
+      const MAX_DATA_POINTS = 3600;
+      const backendUrl = 'https://iot-monitor-i2wr.onrender.com';
+    
+      // Creación de los medidores con ApexCharts
+      const gaugeVolt = new ApexCharts(document.querySelector("#gaugeVolt"), { chart: { type: 'radialBar' }, series: [0], labels: ['Voltaje (V)'], colors: ['#008ffb'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' V' } } } } });
+      gaugeVolt.render();
+      const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Corriente (A)'], colors: ['#feb019'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' A' } } } } });
+      gaugeAmp.render();
+      const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura (°C)'], colors: ['#00e396'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp.render();
+      const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura 1 (°C)'], colors: ['#ff4560'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp1.render();
+
+      // Creación de los gráficos de línea con Chart.js
+      function createLineChart(id, label, color) {
+        const ctx = document.getElementById(id).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: {
+            datasets: [{
+              label: label, data: [], borderColor: color,
+              pointRadius: 0.3, tension: 0.1, borderWidth: 2, fill: false
+            }]
+          },
+          options: {
+            scales: {
+              x: {
+                type: 'time',
+                display: true,
+                time: {
+                  unit: 'second',
+                  tooltipFormat: 'HH:mm:ss',
+                  displayFormats: {
+                    second: 'HH:mm:ss'
+                  }
+                },
+                ticks: { color: '#ccc' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }, 
+              y: { 
+                beginAtZero: true, 
+                ticks: { color: '#ccc', stepSize: 1 },
+                grid: { display: false }
+              }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+      const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
+      const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
+      const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
+      const chartTemp1 = createLineChart('chartTemp1', 'Temperatura 1 (°C)', '#ff4560');
+    
+      const updateChart = (chart, newDataPoint) => {
+        const data = chart.data.datasets[0].data;
+        data.push(newDataPoint);
+        if (data.length > MAX_DATA_POINTS) {
+          data.shift();
+        }
+        chart.update('quiet');
+      };
+
+      // Función central para actualizar toda la interfaz
+      function actualizarUI(lectura) {
+        const timestamp = new Date(lectura.timestamp).getTime();
+        gaugeVolt.updateSeries([lectura.volt]);
+        gaugeAmp.updateSeries([lectura.amp]);
+        gaugeTemp.updateSeries([lectura.temp]);
+        gaugeTemp1.updateSeries([lectura.temp1]);
+        updateChart(chartVolt, { x: timestamp, y: lectura.volt });
+        updateChart(chartAmp, { x: timestamp, y: lectura.amp });
+        updateChart(chartTemp, { x: timestamp, y: lectura.temp });
+        updateChart(chartTemp1, { x: timestamp, y: lectura.temp1 });
+      }
+    
+      // Lógica del botón de borrado
+      const deleteBtn = document.getElementById('delete-btn');
+      const modal = document.getElementById('confirm-modal');
+      const confirmDeleteBtn = document.getElementById('confirm-delete');
+      const cancelDeleteBtn = document.getElementById('cancel-delete');
+      deleteBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+      cancelDeleteBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+      confirmDeleteBtn.addEventListener('click', () => {
+        fetch(`${backendUrl}/api/delete-all`, { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data.message);
+            modal.style.display = 'none';
+            window.location.reload();
+          })
+          .catch(error => {
+            console.error('Error al intentar borrar los datos:', error);
+            modal.style.display = 'none';
+          });
+      });
+    
+      // --- LÓGICA DE POLLING ---
+      let ultimoIdProcesado = -1;
+
+      // Función para cargar los datos históricos al iniciar
+      function cargarDatosIniciales() {
+        fetch(`${backendUrl}/api/initial-data`)
+          .then(res => res.json())
+          .then(datos => {
+            console.log(`Cargados ${datos.length} registros históricos.`);
+            
+            const fillChart = (chart, data, key) => {
+                chart.data.datasets[0].data = data.map(d => ({ x: new Date(d.timestamp).getTime(), y: d[key] }));
+                chart.update();
+            };
+
+            fillChart(chartVolt, datos, 'volt');
+            fillChart(chartAmp, datos, 'amp');
+            fillChart(chartTemp, datos, 'temp');
+            fillChart(chartTemp1, datos, 'temp1');
+            
+            if (datos.length > 0) {
+                ultimoIdProcesado = datos[datos.length - 1].id;
+                const ultimaLectura = datos[datos.length - 1];
+                gaugeVolt.updateSeries([ultimaLectura.volt]);
+                gaugeAmp.updateSeries([ultimaLectura.amp]);
+                gaugeTemp.updateSeries([ultimaLectura.temp]);
+                gaugeTemp1.updateSeries([ultimaLectura.temp1]);
+            }
+          })
+          .catch(err => console.error('Error al cargar datos iniciales:', err));
+      }
+
+      // Función para consultar el último dato
+      function cargarUltimaLectura() {
+        fetch(`${backendUrl}/api/ultima-lectura`)
+          .then(res => res.json())
+          .then(lectura => {
+            if (lectura && lectura.id && lectura.id !== ultimoIdProcesado) {
+              actualizarUI(lectura);
+              ultimoIdProcesado = lectura.id;
+            }
+          })
+          .catch(err => console.error('Error al cargar última lectura:', err));
+      }
+
+      // Cargar los datos iniciales una vez
+      cargarDatosIniciales();
+      // Y luego, empezar a preguntar por el último dato cada segundo
+      setInterval(cargarUltimaLectura, 500);
+    
+    });
+  </script>
+</body>
+</html>-->
+
+<!-- Página de Config -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Mediciones</title>
+  
+  <style>
+    /* Estilos CSS para el dashboard */
+    body { margin: 0; background-color: #121212; color: #ffffff; font-family: Arial, sans-serif; }
+    h1 { text-align: center; font-size: 2em; margin: 20px 0; }
+    .header-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    .btn { color: white; padding: 10px 20px; text-decoration: none; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+    .download-btn { background-color: #008ffb; }
+    .download-btn:hover { background-color: #0073c4; }
+    .delete-btn { background-color: #e94560; }
+    .delete-btn:hover { background-color: #c73048; }
+    /* **CAMBIO 1: Nuevo estilo para el botón de configuración** */
+    .settings-btn { background-color: #777; }
+    .settings-btn:hover { background-color: #555; }
+    
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+    .modal-content { background-color: #2a2a2a; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .modal-content p { margin: 0 0 20px; font-size: 1.1em; }
+    .modal-buttons .btn { margin: 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 0 40px 40px; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
+    .chart { height: 150px; }
+    canvas { margin-top: 15px; }
+
+    /* Estilos para el formulario de alertas */
+    .settings-container {
+        max-width: 600px;
+        margin: 0 auto 40px auto;
+        padding: 20px;
+        background-color: #1e1e1e;
+        border-radius: 12px;
+    }
+    .settings-container h2 {
+        margin-top: 0;
+        text-align: center;
+    }
+    .form-group {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+    }
+    .form-group label {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .form-group input {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background-color: #333;
+        color: white;
+    }
+    .save-btn {
+        width: 100%;
+        background-color: #00e396;
+    }
+    .save-btn:hover {
+        background-color: #00b377;
+    }
+    /* **CAMBIO 2: Estilo para el botón de volver** */
+    .back-btn {
+        margin-top: 15px;
+        background-color: #555;
+    }
+    .back-btn:hover {
+        background-color: #444;
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- **CAMBIO 3: Contenedor para la vista principal del Dashboard** -->
+  <div id="dashboard-view">
+    <h1><strong>Dashboard de Mediciones</strong></h1>
+  
+    <div class="header-container">
+      <a href="https://iot-monitor-i2wr.onrender.com/download/csv" class="btn download-btn">Descargar Datos (CSV)</a>
+      <button id="delete-btn" class="btn delete-btn">Borrar Datos</button>
+      <button id="go-to-settings-btn" class="btn settings-btn">Configuración de Alertas</button>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+      <div class="modal-content">
+          <p>¿Estás seguro de que quieres borrar todos los datos? Esta acción no se puede deshacer.</p>
+          <div class="modal-buttons">
+              <button id="cancel-delete" class="btn">Cancelar</button>
+              <button id="confirm-delete" class="btn delete-btn">Sí, Borrar Todo</button>
+          </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div id="gaugeVolt" class="chart"></div><canvas id="chartVolt"></canvas></div>
+      <div class="card"><div id="gaugeAmp" class="chart"></div><canvas id="chartAmp"></canvas></div>
+      <div class="card"><div id="gaugeTemp" class="chart"></div><canvas id="chartTemp"></canvas></div>
+      <div class="card"><div id="gaugeTemp1" class="chart"></div><canvas id="chartTemp1"></canvas></div>
+    </div>
+  </div>
+
+  <!-- **CAMBIO 4: Contenedor para la vista de Configuración (inicialmente oculto)** -->
+  <div id="settings-view" style="display: none;">
+    <div class="settings-container">
+      <h2>Configuración de Alertas</h2>
+      <div class="form-group">
+          <label for="volt_max">Umbral Máximo de Voltaje (V):</label>
+          <input type="number" id="volt_max" name="volt_max" step="0.1">
+      </div>
+      <div class="form-group">
+          <label for="amp_max">Umbral Máximo de Corriente (A):</label>
+          <input type="number" id="amp_max" name="amp_max" step="0.01">
+      </div>
+      <button id="save-settings-btn" class="btn save-btn">Guardar Ajustes</button>
+      <button id="back-to-dashboard-btn" class="btn back-btn">Volver al Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Scripts al final del body -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+    
+      const MAX_DATA_POINTS = 360;
+      const backendUrl = 'https://iot-monitor-i2wr.onrender.com';
+      
+      // **CAMBIO 5: Obtener referencias a los nuevos elementos y vistas**
+      const dashboardView = document.getElementById('dashboard-view');
+      const settingsView = document.getElementById('settings-view');
+      const goToSettingsBtn = document.getElementById('go-to-settings-btn');
+      const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+
+      // --- LÓGICA DE NAVEGACIÓN ENTRE VISTAS ---
+      goToSettingsBtn.addEventListener('click', () => {
+        dashboardView.style.display = 'none';
+        settingsView.style.display = 'block';
+      });
+
+      backToDashboardBtn.addEventListener('click', () => {
+        settingsView.style.display = 'none';
+        dashboardView.style.display = 'block';
+      });
+
+      // --- LÓGICA PARA EL FORMULARIO DE AJUSTES ---
+      const voltMaxInput = document.getElementById('volt_max');
+      const ampMaxInput = document.getElementById('amp_max');
+      const saveSettingsBtn = document.getElementById('save-settings-btn');
+
+      function cargarAjustes() {
+          fetch(`${backendUrl}/api/ajustes`)
+              .then(res => res.json())
+              .then(data => {
+                  voltMaxInput.value = data.volt_max;
+                  ampMaxInput.value = data.amp_max;
+              })
+              .catch(err => console.error('Error al cargar ajustes:', err));
+      }
+
+      saveSettingsBtn.addEventListener('click', () => {
+          const nuevosAjustes = {
+              volt_max: voltMaxInput.value,
+              amp_max: ampMaxInput.value
+          };
+          fetch(`${backendUrl}/api/ajustes`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(nuevosAjustes)
+          })
+          .then(res => res.json())
+          .then(data => {
+              alert(data.message);
+          })
+          .catch(err => console.error('Error al guardar ajustes:', err));
+      });
+
+      cargarAjustes();
+      
+      // --- LÓGICA DE GRÁFICOS (SIN CAMBIOS) ---
+      const gaugeVolt = new ApexCharts(document.querySelector("#gaugeVolt"), { chart: { type: 'radialBar' }, series: [0], labels: ['Voltaje (V)'], colors: ['#008ffb'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' V' } } } } });
+      gaugeVolt.render();
+      const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Corriente (A)'], colors: ['#feb019'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' A' } } } } });
+      gaugeAmp.render();
+      const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura (°C)'], colors: ['#00e396'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp.render();
+      const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura 1 (°C)'], colors: ['#ff4560'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      gaugeTemp1.render();
+      function createLineChart(id, label, color) {
+        const ctx = document.getElementById(id).getContext('2d');
+        return new Chart(ctx, {
+          type: 'line',
+          data: {
+            datasets: [{
+              label: label, data: [], borderColor: color,
+              pointRadius: 0.3, tension: 0.1, borderWidth: 2, fill: false
+            }]
+          },
+          options: {
+            scales: {
+              x: {
+                type: 'time',
+                display: true,
+                time: {
+                  unit: 'second',
+                  tooltipFormat: 'HH:mm:ss',
+                  displayFormats: {
+                    second: 'HH:mm:ss'
+                  }
+                },
+                ticks: { color: '#ccc' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }, 
+              y: { 
+                beginAtZero: true, 
+                ticks: { color: '#ccc', stepSize: 1 },
+                grid: { display: false }
+              }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+      const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
+      const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
+      const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
+      const chartTemp1 = createLineChart('chartTemp1', 'Temperatura 1 (°C)', '#ff4560');
+    
+      const updateChart = (chart, newDataPoint) => {
+        const data = chart.data.datasets[0].data;
+        data.push(newDataPoint);
+        if (data.length > MAX_DATA_POINTS) {
+          data.shift();
+        }
+        chart.update('quiet');
+      };
+
+      function actualizarUI(lectura) {
+        const timestamp = new Date(lectura.timestamp).getTime();
+        gaugeVolt.updateSeries([lectura.volt]);
+        gaugeAmp.updateSeries([lectura.amp]);
+        gaugeTemp.updateSeries([lectura.temp]);
+        gaugeTemp1.updateSeries([lectura.temp1]);
+        updateChart(chartVolt, { x: timestamp, y: lectura.volt });
+        updateChart(chartAmp, { x: timestamp, y: lectura.amp });
+        updateChart(chartTemp, { x: timestamp, y: lectura.temp });
+        updateChart(chartTemp1, { x: timestamp, y: lectura.temp1 });
+      }
+    
+      // Lógica del botón de borrado
+      const deleteBtn = document.getElementById('delete-btn');
+      const modal = document.getElementById('confirm-modal');
+      const confirmDeleteBtn = document.getElementById('confirm-delete');
+      const cancelDeleteBtn = document.getElementById('cancel-delete');
+      deleteBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+      cancelDeleteBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+      confirmDeleteBtn.addEventListener('click', () => {
+        fetch(`${backendUrl}/api/delete-all`, { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data.message);
+            modal.style.display = 'none';
+            window.location.reload();
+          })
+          .catch(error => {
+            console.error('Error al intentar borrar los datos:', error);
+            modal.style.display = 'none';
+          });
+      });
+    
+      // --- LÓGICA DE POLLING ---
+      let ultimoIdProcesado = -1;
+
+      function cargarDatosIniciales() {
+        fetch(`${backendUrl}/api/initial-data`)
+          .then(res => res.json())
+          .then(datos => {
+            console.log(`Cargados ${datos.length} registros históricos.`);
+            
+            const fillChart = (chart, data, key) => {
+                chart.data.datasets[0].data = data.map(d => ({ x: new Date(d.timestamp).getTime(), y: d[key] }));
+                chart.update();
+            };
+
+            fillChart(chartVolt, datos, 'volt');
+            fillChart(chartAmp, datos, 'amp');
+            fillChart(chartTemp, datos, 'temp');
+            fillChart(chartTemp1, datos, 'temp1');
+            
+            if (datos.length > 0) {
+                ultimoIdProcesado = datos[datos.length - 1].id;
+                const ultimaLectura = datos[datos.length - 1];
+                gaugeVolt.updateSeries([ultimaLectura.volt]);
+                gaugeAmp.updateSeries([ultimaLectura.amp]);
+                gaugeTemp.updateSeries([ultimaLectura.temp]);
+                gaugeTemp1.updateSeries([ultimaLectura.temp1]);
+            }
+          })
+          .catch(err => console.error('Error al cargar datos iniciales:', err));
+      }
+
+      function cargarUltimaLectura() {
+        fetch(`${backendUrl}/api/ultima-lectura`)
+          .then(res => res.json())
+          .then(lectura => {
+            if (lectura && lectura.id && lectura.id !== ultimoIdProcesado) {
+              actualizarUI(lectura);
+              ultimoIdProcesado = lectura.id;
+            }
+          })
+          .catch(err => console.error('Error al cargar última lectura:', err));
+      }
+
+      cargarDatosIniciales();
+      setInterval(cargarUltimaLectura, 500);
+    
+    });
+  </script>
+</body>
+</html>
