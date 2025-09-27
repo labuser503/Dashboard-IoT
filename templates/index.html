@@ -208,8 +208,8 @@
                 grid: { color: 'rgba(255, 255, 255, 0.1)' }
               }, 
               y: { 
-                beginAtZero: false, 
-                ticks: { color: '#ccc' },
+                beginAtZero: true, 
+                ticks: { color: '#ccc', stepSize: 1 },
                 grid: { display: false }
               }
             },
@@ -231,7 +231,7 @@
         chart.update('quiet');
       };
       
-      // *** NUEVA FUNCIÓN PARA ACTUALIZAR MEDIDORES CON ESTADO DE ERROR ***
+      // *** CAMBIO 1: FUNCIÓN AUXILIAR PARA ACTUALIZAR MEDIDORES ***
       function updateGauge(gauge, value, unit) {
         if (value < 0) {
           gauge.updateOptions({
@@ -266,15 +266,17 @@
         }
       }
 
-      // *** FUNCIÓN `actualizarUI` MODIFICADA PARA MANEJAR ERRORES ***
+      // *** CAMBIO 2: FUNCIÓN `actualizarUI` CORREGIDA ***
       function actualizarUI(lectura) {
         const timestamp = new Date(lectura.timestamp).getTime();
-
+        
+        // Se actualizan los medidores con la nueva lógica
         updateGauge(gaugeVolt, lectura.volt, 'V');
         updateGauge(gaugeAmp, lectura.amp, 'A');
         updateGauge(gaugeTemp, lectura.temp, '°C');
         updateGauge(gaugeTemp1, lectura.temp1, '°C');
 
+        // Se actualizan los gráficos de línea, reemplazando -1 por null para crear huecos
         updateChart(chartVolt, { x: timestamp, y: lectura.volt < 0 ? null : lectura.volt });
         updateChart(chartAmp, { x: timestamp, y: lectura.amp < 0 ? null : lectura.amp });
         updateChart(chartTemp, { x: timestamp, y: lectura.temp < 0 ? null : lectura.temp });
@@ -309,7 +311,9 @@
           .then(datos => {
             console.log(`Cargados ${datos.length} registros históricos.`);
             
+            // *** CAMBIO 3: FUNCIÓN `fillChart` CORREGIDA ***
             const fillChart = (chart, data, key) => {
+                // Reemplaza cualquier valor histórico < 0 con 'null' para mostrar huecos
                 chart.data.datasets[0].data = data.map(d => ({ x: new Date(d.timestamp).getTime(), y: d[key] < 0 ? null : d[key] }));
                 chart.update();
             };
@@ -321,6 +325,7 @@
             
             if (datos.length > 0) {
                 ultimoIdProcesado = datos[datos.length - 1].id;
+                // La primera actualización de los gauges se hará en la primera llamada a cargarUltimaLectura
             }
           })
           .catch(err => console.error('Error al cargar datos iniciales:', err));
