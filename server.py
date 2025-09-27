@@ -157,7 +157,7 @@ def download_csv():
         todas_las_lecturas = Lectura.query.all()
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(['ID', 'Timestamp (Hora Colombia)', 'Voltaje (V)', 'Corriente (A)', 'Temperatura (°C)', 'Temperatura 1 (°C)'])
+        writer.writerow(['ID', 'Timestamp (Hora Colombia)', 'Voltaje (V)', 'Corriente (A)', 'Temperatura Circulator (°C)', 'Temperatura DS18B20 (°C)'])
         for lectura in todas_las_lecturas:
             colombia_timestamp = lectura.timestamp.astimezone(colombia_tz)
             writer.writerow([lectura.id, colombia_timestamp.strftime('%Y-%m-%d %H:%M:%S'), lectura.volt, lectura.amp, lectura.temp, lectura.temp1])
