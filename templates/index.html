@@ -187,9 +187,9 @@
       gaugeVolt.render();
       const gaugeAmp = new ApexCharts(document.querySelector("#gaugeAmp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Corriente (A)'], colors: ['#feb019'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' A' } } } } });
       gaugeAmp.render();
-      const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura (°C)'], colors: ['#00e396'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      const gaugeTemp = new ApexCharts(document.querySelector("#gaugeTemp"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura Circulator (°C)'], colors: ['#00e396'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
       gaugeTemp.render();
-      const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura 1 (°C)'], colors: ['#ff4560'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
+      const gaugeTemp1 = new ApexCharts(document.querySelector("#gaugeTemp1"), { chart: { type: 'radialBar' }, series: [0], labels: ['Temperatura DS18B20 (°C)'], colors: ['#ff4560'], plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '22px', formatter: (val) => val.toFixed(2) + ' °C' } } } } });
       gaugeTemp1.render();
       function createLineChart(id, label, color) {
         const ctx = document.getElementById(id).getContext('2d');
@@ -228,8 +228,8 @@
       }
       const chartVolt = createLineChart('chartVolt', 'Voltaje (V)', '#008ffb');
       const chartAmp = createLineChart('chartAmp', 'Corriente (A)', '#feb019');
-      const chartTemp = createLineChart('chartTemp', 'Temperatura (°C)', '#00e396');
-      const chartTemp1 = createLineChart('chartTemp1', 'Temperatura 1 (°C)', '#ff4560');
+      const chartTemp = createLineChart('chartTemp', 'Temperatura Circulator (°C)', '#00e396');
+      const chartTemp1 = createLineChart('chartTemp1', 'Temperatura DS18B20 (°C)', '#ff4560');
     
       const updateChart = (chart, newDataPoint) => {
         const data = chart.data.datasets[0].data;
