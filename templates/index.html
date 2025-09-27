@@ -230,18 +230,18 @@
         }
         chart.update('quiet');
       };
-      
-      // *** CAMBIO 1: FUNCIÓN AUXILIAR PARA ACTUALIZAR MEDIDORES ***
+
+      // *** CAMBIO 1: FUNCIÓN PARA ACTUALIZAR MEDIDORES CON MANEJO DE ERRORES ***
       function updateGauge(gauge, value, unit) {
         if (value < 0) {
           gauge.updateOptions({
-            series: [0],
+            series: [0], // Pone la barra en 0
             plotOptions: {
               radialBar: {
                 dataLabels: {
                   value: {
-                    formatter: () => "Sensor no conectado",
-                    fontSize: '16px',
+                    formatter: () => "Error", // Muestra el texto de error
+                    fontSize: '20px',
                     color: "#e94560"
                   }
                 }
@@ -265,18 +265,19 @@
           });
         }
       }
-
-      // *** CAMBIO 2: FUNCIÓN `actualizarUI` CORREGIDA ***
+      
+      // *** CAMBIO 2: FUNCIÓN PARA ACTUALIZAR LA UI CON LA LÓGICA CORRECTA ***
       function actualizarUI(lectura) {
         const timestamp = new Date(lectura.timestamp).getTime();
         
-        // Se actualizan los medidores con la nueva lógica
+        // Se llama a la función auxiliar para los medidores
         updateGauge(gaugeVolt, lectura.volt, 'V');
         updateGauge(gaugeAmp, lectura.amp, 'A');
         updateGauge(gaugeTemp, lectura.temp, '°C');
         updateGauge(gaugeTemp1, lectura.temp1, '°C');
 
-        // Se actualizan los gráficos de línea, reemplazando -1 por null para crear huecos
+        // Se comprueba si el valor es < 0 antes de enviarlo a la gráfica
+        // Si es < 0, se envía 'null' para crear un hueco
         updateChart(chartVolt, { x: timestamp, y: lectura.volt < 0 ? null : lectura.volt });
         updateChart(chartAmp, { x: timestamp, y: lectura.amp < 0 ? null : lectura.amp });
         updateChart(chartTemp, { x: timestamp, y: lectura.temp < 0 ? null : lectura.temp });
@@ -311,9 +312,8 @@
           .then(datos => {
             console.log(`Cargados ${datos.length} registros históricos.`);
             
-            // *** CAMBIO 3: FUNCIÓN `fillChart` CORREGIDA ***
+            // *** CAMBIO 3: FUNCIÓN fillChart CORREGIDA PARA DATOS HISTÓRICOS ***
             const fillChart = (chart, data, key) => {
-                // Reemplaza cualquier valor histórico < 0 con 'null' para mostrar huecos
                 chart.data.datasets[0].data = data.map(d => ({ x: new Date(d.timestamp).getTime(), y: d[key] < 0 ? null : d[key] }));
                 chart.update();
             };
@@ -325,7 +325,7 @@
             
             if (datos.length > 0) {
                 ultimoIdProcesado = datos[datos.length - 1].id;
-                // La primera actualización de los gauges se hará en la primera llamada a cargarUltimaLectura
+                // La primera actualización de los gauges ocurrirá con la primera llamada a cargarUltimaLectura
             }
           })
           .catch(err => console.error('Error al cargar datos iniciales:', err));
