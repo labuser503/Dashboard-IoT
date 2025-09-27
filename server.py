@@ -17,7 +17,7 @@ import requests
 # --- CONFIGURACIÓN ---
 MQTT_BROKER = 'broker.hivemq.com'
 MQTT_PORT = 1883
-MQTT_TOPIC = 'iot/dayana-monitor/data'
+MQTT_TOPIC = 'iot/dashboard/data'
 colombia_tz = timezone(timedelta(hours=-5))
 # El canal de notificación está fijo en el backend, como solicitaste
 NTFY_TOPIC = 'alertas-iot-monitor-9876'
