@@ -1,4 +1,13 @@
-# Alertas incluídas
+# ==============================================================================
+# BACKEND PARA DASHBOARD DE SENSORES IOT
+# ==============================================================================
+# Este script de Flask crea una API web, se conecta a un broker MQTT para
+# recibir datos de sensores, los almacena en una base de datos PostgreSQL,
+# y sirve un frontend (index.html) para visualizarlos en tiempo real.
+# Toda la configuración crítica se gestiona a través de variables de entorno.
+# ==============================================================================
+
+# --- 1. IMPORTACIÓN DE LIBRERÍAS ---
 import eventlet
 eventlet.monkey_patch()
 
@@ -14,29 +23,44 @@ import paho.mqtt.client as mqtt
 from flask_cors import CORS
 import requests
 
-# --- CONFIGURACIÓN ---
-MQTT_BROKER = 'broker.hivemq.com'
-MQTT_PORT = 1883
-MQTT_TOPIC = 'iot/dashboard/data'
+# --- 2. CONFIGURACIÓN DESDE VARIABLES DE ENTORNO ---
+# Se leen las configuraciones desde las variables de entorno de Render.
+# Si alguna de estas variables no está definida, la aplicación fallará al iniciar.
+
+try:
+    MQTT_BROKER = os.environ['MQTT_BROKER']
+    MQTT_PORT = int(os.environ['MQTT_PORT'])
+    MQTT_TOPIC = os.environ['MQTT_TOPIC']
+except KeyError as e:
+    # Lanza un error claro si falta una variable de entorno esencial
+    raise RuntimeError(f"Error: La variable de entorno obligatoria {e} no está definida.") from e
+
+# Configuración de la zona horaria para Colombia
 colombia_tz = timezone(timedelta(hours=-5))
-# El canal de notificación está fijo en el backend, como solicitaste
+
+# Topic de notificaciones (mantenido según tu petición)
 NTFY_TOPIC = 'alertas-iot-monitor-9876'
 
-# --- INICIALIZACIÓN DE LA APLICACIÓN ---
+# --- 3. INICIALIZACIÓN DE LA APLICACIÓN FLASK ---
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'una-clave-secreta-muy-fuerte-para-desarrollo')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-secreta-para-desarrollo')
 CORS(app)
 
-# --- CONFIGURACIÓN DE LA BASE DE DATOS ---
+# --- 4. CONFIGURACIÓN DE LA BASE DE DATOS POSTGRESQL ---
 database_url = os.getenv('DATABASE_URL')
-if database_url and database_url.startswith("postgres://"):
+if not database_url:
+    raise RuntimeError("Error: La variable de entorno DATABASE_URL no está definida.")
+
+if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 280, 'pool_pre_ping': True}
 db = SQLAlchemy(app)
 
-# --- MODELOS DE LA BASE DE DATOS ---
+# --- 5. MODELOS DE LA BASE DE DATOS (TABLAS) ---
+# ... (El resto del código es idéntico al anterior, ya que estaba bien estructurado) ...
 class Lectura(db.Model):
     __tablename__ = 'lecturas'
     id = db.Column(db.Integer, primary_key=True)
@@ -53,14 +77,13 @@ class Lectura(db.Model):
             'timestamp': self.timestamp.astimezone(colombia_tz).isoformat()
         }
 
-# Modelo para guardar los ajustes de las alertas
 class Ajustes(db.Model):
     __tablename__ = 'ajustes'
-    id = db.Column(db.Integer, primary_key=True) # Solo habrá una fila con id=1
+    id = db.Column(db.Integer, primary_key=True)
     volt_max = db.Column(db.Float, nullable=False, default=100.0)
     amp_max = db.Column(db.Float, nullable=False, default=1.0)
 
-# --- LÓGICA DE ALERTAS Y MQTT ---
+# --- 6. LÓGICA DE ALERTAS Y MQTT ---
 def enviar_notificacion(mensaje):
     try:
         requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=mensaje.encode('utf-8'))
@@ -70,7 +93,7 @@ def enviar_notificacion(mensaje):
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print("Conectado exitosamente al Broker MQTT!")
+        print(f"Conectado exitosamente al Broker MQTT en {MQTT_BROKER}!")
         client.subscribe(MQTT_TOPIC)
     else:
         print(f"Fallo al conectar, código de retorno {rc}\n")
@@ -87,30 +110,28 @@ def on_message(client, userdata, msg):
             db.session.commit()
             print(f"Dato de MQTT guardado en la BD: ID {nueva_lectura.id}")
 
-            # Comprobar si hay que enviar alertas
             ajustes = Ajustes.query.first()
             if ajustes:
-                if nueva_lectura.volt > ajustes.volt_max:
+                if nueva_lectura.volt >= 0 and nueva_lectura.volt > ajustes.volt_max:
                     mensaje = f"¡Alerta de Voltaje! Valor actual: {nueva_lectura.volt:.2f}V (Umbral: {ajustes.volt_max}V)"
                     enviar_notificacion(mensaje)
                 
-                if nueva_lectura.amp > ajustes.amp_max:
+                if nueva_lectura.amp >= 0 and nueva_lectura.amp > ajustes.amp_max:
                     mensaje = f"¡Alerta de Corriente! Valor actual: {nueva_lectura.amp:.2f}A (Umbral: {ajustes.amp_max}A)"
                     enviar_notificacion(mensaje)
         except Exception as e:
             print(f"Error al procesar el mensaje MQTT: {e}")
 
-# --- RUTAS HTTP ---
+# --- 7. RUTAS DE LA API WEB (ENDPOINTS) ---
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Rutas para gestionar los ajustes de las alertas
 @app.route('/api/ajustes', methods=['GET'])
 def get_ajustes():
     ajustes = Ajustes.query.first()
     if not ajustes:
-        ajustes = Ajustes(id=1) # Crear la primera fila de ajustes
+        ajustes = Ajustes(id=1)
         db.session.add(ajustes)
         db.session.commit()
     return jsonify({'volt_max': ajustes.volt_max, 'amp_max': ajustes.amp_max})
@@ -120,7 +141,6 @@ def set_ajustes():
     data = request.get_json()
     ajustes = Ajustes.query.first()
     
-    # **CAMBIO: Validar la entrada para evitar errores si los campos están vacíos**
     try:
         new_volt_max = data.get('volt_max')
         if new_volt_max is not None and str(new_volt_max).strip() != '':
@@ -158,13 +178,16 @@ def download_csv():
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(['ID', 'Timestamp (Hora Colombia)', 'Voltaje (V)', 'Corriente (A)', 'Temperatura Circulator (°C)', 'Temperatura DS18B20 (°C)'])
+        
         for lectura in todas_las_lecturas:
             colombia_timestamp = lectura.timestamp.astimezone(colombia_tz)
             writer.writerow([lectura.id, colombia_timestamp.strftime('%Y-%m-%d %H:%M:%S'), lectura.volt, lectura.amp, lectura.temp, lectura.temp1])
+        
         memoria_csv = io.BytesIO()
         memoria_csv.write(output.getvalue().encode('utf-8'))
         memoria_csv.seek(0)
         output.close()
+        
         return send_file(memoria_csv, as_attachment=True, download_name='datos_sensores_iot.csv', mimetype='text/csv')
 
 @app.route('/api/delete-all', methods=['POST'])
@@ -177,7 +200,7 @@ def delete_all_data():
         db.session.rollback()
         return jsonify(status="error", message=str(e)), 500
 
-# --- INICIALIZACIÓN DE SERVICIOS ---
+# --- 8. INICIALIZACIÓN DE SERVICIOS ---
 mqtt_client = mqtt.Client()
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
@@ -187,7 +210,7 @@ mqtt_client.loop_start()
 with app.app_context():
     db.create_all()
 
-# --- EJECUCIÓN DE LA APLICACIÓN ---
+# --- 9. EJECUCIÓN DE LA APLICACIÓN ---
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
