@@ -165,7 +165,7 @@ def download_csv():
         memoria_csv.write(output.getvalue().encode('utf-8'))
         memoria_csv.seek(0)
         output.close()
-        return send_file(memoria_csv, as_attachment=True, download_name='datos_iot_colombia.csv', mimetype='text/csv')
+        return send_file(memoria_csv, as_attachment=True, download_name='datos_sensores_iot.csv', mimetype='text/csv')
 
 @app.route('/api/delete-all', methods=['POST'])
 def delete_all_data():
