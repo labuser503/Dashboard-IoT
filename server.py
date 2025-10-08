@@ -8,20 +8,20 @@
 # ==============================================================================
 
 # --- 1. IMPORTACIÓN DE LIBRERÍAS ---
-import eventlet
-eventlet.monkey_patch()
+import eventlet                  # Biblioteca de concurrencia que permite manejar múltiples operaciones de red de forma eficiente.
+eventlet.monkey_patch()          # Parchea las librerías estándar de Python para usar las funciones asíncronas de eventlet.
 
-import os
-import json
-import io
-import csv
-from datetime import datetime, timezone, timedelta
-from flask import Flask, render_template, send_file, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
-import paho.mqtt.client as mqtt
-from flask_cors import CORS
-import requests
+import os                        # Interfaz con el sistema operativo (ej. manejo de archivos o variables de entorno).
+import json                      # Codificación y decodificación de datos en formato JSON.
+import io                        # Herramientas para manejar flujos de E/S en memoria (útil para generar archivos temporales).
+import csv                       # Lectura y escritura de archivos en formato CSV (para exportación de datos).
+from datetime import datetime, timezone, timedelta                              # Clases para manejar el tiempo, zonas horarias y cálculos de duración.
+from flask import Flask, render_template, send_file, jsonify, request           # El microframework Flask y sus utilidades para manejar peticiones web.
+from flask_sqlalchemy import SQLAlchemy             # Extensión para integrar el ORM SQLAlchemy con Flask para la base de datos.
+from sqlalchemy import text      # Permite ejecutar sentencias SQL crudas o consultas avanzadas.
+import paho.mqtt.client as mqtt  # Cliente para la comunicación con el broker MQTT (protocolo IoT).
+from flask_cors import CORS      # Extensión para habilitar CORS, permitiendo el acceso desde dominios externos.
+import requests                  # Cliente HTTP para hacer peticiones salientes a otras APIs o servicios web.
 
 # --- 2. CONFIGURACIÓN DESDE VARIABLES DE ENTORNO ---
 # Se leen las configuraciones desde las variables de entorno de Render.
@@ -38,7 +38,7 @@ except KeyError as e:
 # Configuración de la zona horaria para Colombia
 colombia_tz = timezone(timedelta(hours=-5))
 
-# Topic de notificaciones (mantenido según tu petición)
+# Topic de notificaciones
 NTFY_TOPIC = 'alertas-iot-monitor-9876'
 
 # --- 3. INICIALIZACIÓN DE LA APLICACIÓN FLASK ---
@@ -60,7 +60,6 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 280, 'pool_pre_ping':
 db = SQLAlchemy(app)
 
 # --- 5. MODELOS DE LA BASE DE DATOS (TABLAS) ---
-# ... (El resto del código es idéntico al anterior, ya que estaba bien estructurado) ...
 class Lectura(db.Model):
     __tablename__ = 'lecturas'
     id = db.Column(db.Integer, primary_key=True)
